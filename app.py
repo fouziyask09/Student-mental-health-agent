@@ -95,65 +95,68 @@ if st.button("Assess Mental Health"):
         columns=feature_names
     )
 
-    # Basic features
-    input_data["age"] = age
-    input_data["marital_status"] = int(marital_status)
+    # Numerical feature
+    if "age" in input_data.columns:
+        input_data.loc[0, "age"] = age
 
+    # Gender
     if "gender_male" in input_data.columns:
-        input_data["gender_male"] = 1 if gender == "Male" else 0
+        input_data.loc[0, "gender_male"] = 1 if gender == "Male" else 0
 
-    # Course encoding
+    # Marital Status
+    if "marital_status_1" in input_data.columns:
+        input_data.loc[0, "marital_status_1"] = 1 if marital_status == "1" else 0
+
+    # Course
     course_col = f"course_{course}"
     if course_col in input_data.columns:
-        input_data[course_col] = 1
+        input_data.loc[0, course_col] = 1
 
-    # Year encoding
-    if year == "year 2" and "year_year 2" in input_data.columns:
-        input_data["year_year 2"] = 1
+    # Year
+    year_col = f"year_{year}"
+    if year_col in input_data.columns:
+        input_data.loc[0, year_col] = 1
 
-    if year == "year 3" and "year_year 3" in input_data.columns:
-        input_data["year_year 3"] = 1
-
-    if year == "year 4" and "year_year 4" in input_data.columns:
-        input_data["year_year 4"] = 1
-
-    # CGPA encoding
+    # CGPA
     cgpa_col = f"cgpa_{cgpa}"
     if cgpa_col in input_data.columns:
-        input_data[cgpa_col] = 1
+        input_data.loc[0, cgpa_col] = 1
+
+    # Reorder columns exactly like training
+    input_data = input_data[feature_names]
 
     # Scale
     scaled_data = scaler.transform(input_data)
 
-    # Predict
+    # Prediction
     prediction = model.predict(scaled_data)[0]
 
     st.subheader("Prediction Result")
 
-    if str(prediction) == "1":
+    if int(prediction) == 1:
         st.error("⚠️ Depression Risk Detected")
 
         st.subheader("Recommendations")
         st.write("""
-        • Maintain proper sleep schedule  
-        • Exercise regularly  
-        • Reduce academic stress  
-        • Talk with friends and family  
-        • Consult a counselor if needed  
-        """)
+- 😴 Maintain a proper sleep schedule
+- 🏃 Exercise regularly
+- 📚 Reduce academic stress
+- 👨‍👩‍👧 Talk with friends and family
+- 🧑‍⚕️ Consult a counselor if needed
+""")
 
     else:
         st.success("✅ No Depression Risk Detected")
 
         st.subheader("Recommendations")
         st.write("""
-        • Continue healthy habits  
-        • Maintain work-life balance  
-        • Stay physically active  
-        • Stay socially connected  
-        """)
+- 😊 Continue healthy habits
+- ⚖️ Maintain work-life balance
+- 🏃 Stay physically active
+- 🤝 Stay socially connected
+""")
 
-    # Save records
+    # Save Record
     record = pd.DataFrame({
         "Age": [age],
         "Marital_Status": [marital_status],
@@ -166,9 +169,8 @@ if st.button("Assess Mental Health"):
 
     try:
         old = pd.read_csv("student_records.csv")
-        new = pd.concat([old, record], ignore_index=True)
-        new.to_csv("student_records.csv", index=False)
-    except:
+        pd.concat([old, record], ignore_index=True).to_csv("student_records.csv", index=False)
+    except FileNotFoundError:
         record.to_csv("student_records.csv", index=False)
 
-    st.success("Record Saved Successfully ✅")
+    st.success("✅ Record Saved Successfully")
